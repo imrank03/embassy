@@ -89,3 +89,8 @@ const fn gcd(a: u64, b: u64) -> u64 {
 
 pub(crate) const GCD_1K: u64 = gcd(TICKS_PER_SECOND, 1_000);
 pub(crate) const GCD_1M: u64 = gcd(TICKS_PER_SECOND, 1_000_000);
+
+#[inline]
+const fn div_ceil(num: u64, den: u64) -> u64 {
+    (num + den - 1) / den
+}

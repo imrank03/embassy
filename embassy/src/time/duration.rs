@@ -1,7 +1,7 @@
 use core::fmt;
 use core::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Sub, SubAssign};
 
-use super::{GCD_1K, GCD_1M, TICKS_PER_SECOND};
+use super::{div_ceil, GCD_1K, GCD_1M, TICKS_PER_SECOND};
 
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
@@ -21,18 +21,33 @@ impl Duration {
         self.ticks
     }
 
-    /// Convert the `Duration` to seconds, rounding down.
+    /// Convert the `Duration` to seconds, rounding up.
     pub const fn as_secs(&self) -> u64 {
+        div_ceil(self.ticks, TICKS_PER_SECOND)
+    }
+
+    /// Convert the `Duration` to milliseconds, rounding up.
+    pub const fn as_millis(&self) -> u64 {
+        div_ceil(self.ticks * (1000 / GCD_1K), TICKS_PER_SECOND / GCD_1K)
+    }
+
+    /// Convert the `Duration` to microseconds, rounding up.
+    pub const fn as_micros(&self) -> u64 {
+        div_ceil(self.ticks * (1_000_000 / GCD_1M), TICKS_PER_SECOND / GCD_1M)
+    }
+
+    /// Convert the `Duration` to seconds, rounding down.
+    pub const fn as_secs_floor(&self) -> u64 {
         self.ticks / TICKS_PER_SECOND
     }
 
     /// Convert the `Duration` to milliseconds, rounding down.
-    pub const fn as_millis(&self) -> u64 {
+    pub const fn as_millis_floor(&self) -> u64 {
         self.ticks * (1000 / GCD_1K) / (TICKS_PER_SECOND / GCD_1K)
     }
 
     /// Convert the `Duration` to microseconds, rounding down.
-    pub const fn as_micros(&self) -> u64 {
+    pub const fn as_micros_floor(&self) -> u64 {
         self.ticks * (1_000_000 / GCD_1M) / (TICKS_PER_SECOND / GCD_1M)
     }
 
@@ -41,23 +56,45 @@ impl Duration {
         Duration { ticks }
     }
 
-    /// Creates a duration from the specified number of seconds
+    /// Creates a duration from the specified number of seconds, rounding up.
     pub const fn from_secs(secs: u64) -> Duration {
         Duration {
             ticks: secs * TICKS_PER_SECOND,
         }
     }
 
-    /// Creates a duration from the specified number of milliseconds
+    /// Creates a duration from the specified number of milliseconds, rounding up.
     pub const fn from_millis(millis: u64) -> Duration {
+        Duration {
+            ticks: div_ceil(millis * (TICKS_PER_SECOND / GCD_1K), 1000 / GCD_1K),
+        }
+    }
+
+    /// Creates a duration from the specified number of microseconds, rounding up.
+    /// NOTE: Delays this small may be inaccurate.
+    pub const fn from_micros(micros: u64) -> Duration {
+        Duration {
+            ticks: div_ceil(micros * (TICKS_PER_SECOND / GCD_1M), 1_000_000 / GCD_1M),
+        }
+    }
+
+    /// Creates a duration from the specified number of seconds, rounding down.
+    pub const fn from_secs_floor(secs: u64) -> Duration {
+        Duration {
+            ticks: secs * TICKS_PER_SECOND,
+        }
+    }
+
+    /// Creates a duration from the specified number of milliseconds, rounding down.
+    pub const fn from_millis_floor(millis: u64) -> Duration {
         Duration {
             ticks: millis * (TICKS_PER_SECOND / GCD_1K) / (1000 / GCD_1K),
         }
     }
 
-    /// Creates a duration from the specified number of microseconds
+    /// Creates a duration from the specified number of microseconds, rounding down.
     /// NOTE: Delays this small may be inaccurate.
-    pub const fn from_micros(micros: u64) -> Duration {
+    pub const fn from_micros_floor(micros: u64) -> Duration {
         Duration {
             ticks: micros * (TICKS_PER_SECOND / GCD_1M) / (1_000_000 / GCD_1M),
         }
